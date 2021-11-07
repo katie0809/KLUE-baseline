@@ -28,6 +28,9 @@ class KlueMRCExample(SquadExample):
         super().__init__(*args, **kwargs)
         self.question_type = question_type
 
+    def __repr__(self):
+      print(f"<KlueMRCProcessor> qas_id: {self.qas_id}, question: {self.quesion_text}, context: {self.title}, answer: {self.answer_text}, positions: {self.start_position} && {self.end_position}")
+
 
 class KlueMRCProcessor(DataProcessor):
 
