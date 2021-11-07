@@ -29,9 +29,9 @@ class KlueMRCExample(SquadExample):
 
 class KlueMRCProcessor(DataProcessor):
 
-    origin_train_file_name: str = "klue-mrc-v1.1_train.json"
-    origin_dev_file_name: str = "klue-mrc-v1.1_dev.json"
-    origin_test_file_name: str = "klue-mrc-v1.1_test.json"
+    origin_train_file_name: str = "x_train.csv"
+    origin_dev_file_name: str = "x_valid.csv"
+    origin_test_file_name: str = "x_test.csv"
 
     datamodule_type = KlueDataModule
 
@@ -84,7 +84,33 @@ class KlueMRCProcessor(DataProcessor):
 
         return dataset
 
-    def _create_examples(self, file_path: str, is_training: bool = True) -> List[KlueMRCExample]:
+    def _create_examples(self, file_path: str, is_training: bool = True, data_split_ratio: int = 1) -> List[KlueMRCExample]:
+        input_data = pd.read_csv(file_path)
+        start_pos, end_pos = 0, len(input_data)
+        if data_split_ratio != 1:
+            split_ratio = (data_split_ratio % 100) / 100
+            chunk = int(len(input_data) * split_ratio)
+            start_pos = int(chunk * (data_split_ratio // 100))
+            end_pos = int(start_pos + chunk)
+            
+        examples = []
+        for i, entry in tqdm(enumerate(input_data[start_pos:end_pos].itertuples())):
+            # print(i, entry)
+            example = KlueMRCExample(
+                question_type=1,
+                qas_id="aihub-mrc-v1_train_"+format(i, '06'),
+                question_text=entry.question,
+                context_text=entry.text,
+                answer_text=entry.answer,
+                start_position_character=entry.answer_start,
+                title=entry.title,
+                is_impossible=False,
+            )
+            examples.append(example)
+
+        return examples
+
+    def _create_examples_backup(self, file_path: str, is_training: bool = True) -> List[KlueMRCExample]:
         with open(file_path, "r", encoding="utf-8") as reader:
             input_data = json.load(reader)["data"]
 
