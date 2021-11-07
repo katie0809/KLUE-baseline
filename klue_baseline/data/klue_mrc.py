@@ -2,6 +2,8 @@ import argparse
 import json
 import logging
 import os
+import pandas as pd
+
 from typing import Any, List, Optional
 
 from overrides import overrides
@@ -39,21 +41,21 @@ class KlueMRCProcessor(DataProcessor):
         super().__init__(args, tokenizer)
 
     @overrides
-    def get_train_dataset(self, data_dir: str, file_name: Optional[str] = None) -> Any:
+    def get_train_dataset(self, data_dir: str, file_name: Optional[str] = None, data_split_ratio: int = 1) -> Any:
         file_path = os.path.join(data_dir, file_name or self.origin_train_file_name)
 
         logger.info(f"Loading from {file_path}")
-        return self._create_dataset(file_path, "train")
+        return self._create_dataset(file_path, "train", data_split_ratio)
 
     @overrides
-    def get_dev_dataset(self, data_dir: str, file_name: Optional[str] = None) -> Any:
+    def get_dev_dataset(self, data_dir: str, file_name: Optional[str] = None, data_split_ratio: int = 1) -> Any:
         file_path = os.path.join(data_dir, file_name or self.origin_dev_file_name)
 
         logger.info(f"Loading from {file_path}")
-        return self._create_dataset(file_path, "valid")
+        return self._create_dataset(file_path, "valid", data_split_ratio)
 
     @overrides
-    def get_test_dataset(self, data_dir: str, file_name: Optional[str] = None) -> Any:
+    def get_test_dataset(self, data_dir: str, file_name: Optional[str] = None, data_split_ratio: int = 1) -> Any:
         file_path = os.path.join(data_dir, file_name or self.origin_test_file_name)
 
         if not os.path.exists(file_path):
@@ -61,11 +63,11 @@ class KlueMRCProcessor(DataProcessor):
             file_path = os.path.join(data_dir, self.hparams.dev_file_name or self.origin_dev_file_name)
 
         logger.info(f"Loading from {file_path}")
-        return self._create_dataset(file_path, "test")
+        return self._create_dataset(file_path, "test", data_split_ratio)
 
-    def _create_dataset(self, file_path: str, dataset_type: str) -> Any:
+    def _create_dataset(self, file_path: str, dataset_type: str, data_split_ratio: int = 1) -> Any:
         is_training = dataset_type == "train"
-        examples = self._create_examples(file_path, is_training=is_training)
+        examples = self._create_examples(file_path, is_training=is_training, data_split_ratio=data_split_ratio)
         features, dataset = squad_convert_examples_to_features(
             examples=examples,
             tokenizer=self.tokenizer,

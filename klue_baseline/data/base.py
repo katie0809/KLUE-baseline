@@ -79,15 +79,15 @@ class DataProcessor:
         self.hparams = args
         self.tokenizer = tokenizer
 
-    def get_train_dataset(self, data_dir: str, file_name: str) -> Dataset:
+    def get_train_dataset(self, data_dir: str, file_name: str, data_split_ratio: int) -> Dataset:
         """Gets a :class:`Dataset` for the train set."""
         raise NotImplementedError()
 
-    def get_dev_dataset(self, data_dir: str, file_name: str) -> Dataset:
+    def get_dev_dataset(self, data_dir: str, file_name: str, data_split_ratio: int) -> Dataset:
         """Gets a :class:`Dataset` for the dev set."""
         raise NotImplementedError()
 
-    def get_test_dataset(self, data_dir: str, file_name: str) -> Dataset:
+    def get_test_dataset(self, data_dir: str, file_name: str, data_split_ratio: int) -> Dataset:
         """Gets a :class:`Dataset` for the test set."""
         raise NotImplementedError()
 
@@ -113,11 +113,11 @@ class KlueDataModule(pl.LightningDataModule):
         logger.info("Creating features from dataset file at %s", self.hparams.data_dir)
 
         if dataset_type == "train":
-            dataset = self.processor.get_train_dataset(self.hparams.data_dir, self.hparams.train_file_name)
+            dataset = self.processor.get_train_dataset(self.hparams.data_dir, self.hparams.train_file_name, self.hparams.data_split_ratio)
         elif dataset_type == "dev":
-            dataset = self.processor.get_dev_dataset(self.hparams.data_dir, self.hparams.dev_file_name)
+            dataset = self.processor.get_dev_dataset(self.hparams.data_dir, self.hparams.dev_file_name, self.hparams.data_split_ratio)
         elif dataset_type == "test":
-            dataset = self.processor.get_test_dataset(self.hparams.data_dir, self.hparams.test_file_name)
+            dataset = self.processor.get_test_dataset(self.hparams.data_dir, self.hparams.test_file_name, self.hparams.data_split_ratio)
         else:
             raise ValueError(f"{dataset_type} do not support. [train|dev|test]")
         logger.info(f"Prepare {dataset_type} dataset (Count: {len(dataset)}) ")
@@ -167,4 +167,5 @@ class KlueDataModule(pl.LightningDataModule):
         parser.add_argument("--num_workers", default=4, type=int, help="kwarg passed to DataLoader")
         parser.add_argument("--train_batch_size", default=32, type=int)
         parser.add_argument("--eval_batch_size", default=64, type=int)
+        parser.add_argument("--data_split_ratio", default=1, type=int)
         return parser
