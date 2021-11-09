@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Union
 
 import torch
 from overrides import overrides
-from transformers import AutoModelForQuestionAnswering
+from transformers import AutoModelForQuestionAnswering, AutoModel
 from transformers.data.metrics.squad_metrics import compute_predictions_logits
 from transformers.data.processors.squad import SquadResult
 

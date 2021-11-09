@@ -62,7 +62,7 @@ python run_klue.py train --task ${task} --output_dir ${OUTPUT_DIR} --data_dir ${
 
 # KLUE-MRC
 task="klue-mrc"
-for model_name in "klue/roberta-small" "klue/roberta-base" "klue/roberta-large"; do
+for model_name in "klue/roberta-small" "klue/roberta-base" "klue/roberta-large" "monologg/kobigbird-bert-base"; do
     python run_klue.py train --task ${task} --output_dir ${OUTPUT_DIR} --data_dir ${DATA_DIR}/${task}-${VERSION}  --model_name_or_path ${model_name} --learning_rate 3e-5 --num_train_epochs 5 --train_batch_size 16 --patience 100000 --max_seq_length 510 --metric_key rouge_w --gpus 0 --num_workers 4
 done
 
