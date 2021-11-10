@@ -3,7 +3,7 @@ import json
 import logging
 import os
 
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, BertTokenizer
 
 from klue_baseline.data import DataProcessor, KlueDataModule
 from klue_baseline.models import BaseTransformer, Mode
@@ -29,10 +29,18 @@ class KlueTask:
     def setup(self, args: argparse.Namespace, command: str) -> None:
         """Setup data, tokenizer, and model."""
         self.set_filename(args)
-
-        tokenizer = AutoTokenizer.from_pretrained(
-            args.tokenizer_name if args.tokenizer_name else args.model_name_or_path,
-        )
+        
+        if "kobigbird" in args.model_name_or_path:
+            logger.info(f"Use following ==> KoBigbird")
+            tokenizer = BertTokenizer.from_pretrained(
+                args.tokenizer_name if args.tokenizer_name else args.model_name_or_path,
+            )
+        else:
+            logger.info(f"Use following ==> Roberta-Klue")
+            tokenizer = AutoTokenizer.from_pretrained(
+                args.tokenizer_name if args.tokenizer_name else args.model_name_or_path,
+            )
+            
         processor = self.processor_type(args, tokenizer)
         datamodule = self.processor_type.datamodule_type(args, processor)
 

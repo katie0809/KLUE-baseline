@@ -68,12 +68,24 @@ class MRCTransformer(BaseTransformer):
         results = []
         feature_indices = batch[3].tolist()
         total_features = self.hparams.data[data_type]["features"]
-
-        for i, feature_index in enumerate(feature_indices):
-            unique_id = int(total_features[feature_index].unique_id)
-            single_example_start_logits = start_logits[i].tolist()
-            single_example_end_logits = end_logits[i].tolist()
-            results.append(SquadResult(unique_id, single_example_start_logits, single_example_end_logits))
+        
+        if "kobigbird" in self.hparams["model_name_or_path"]:
+            print(f'[LOGITS] {start_logits}, {type(start_logits)}, {start_logits[:10]}')
+            start_logits = self.tensor_to_list(start_logits)
+            end_logits = self.tensor_to_list(end_logits)
+            for i, feature_index in enumerate(feature_indices):
+                unique_id = int(total_features[feature_index].unique_id)
+                single_example_start_logits = start_logits[i]
+                single_example_end_logits = end_logits[i]
+                results.append(SquadResult(unique_id, single_example_start_logits, single_example_end_logits))
+        
+        else:
+            for i, feature_index in enumerate(feature_indices):
+                print(f'[LOGITS] {start_logits}, {type(start_logits)}, {start_logits[0]}')
+                unique_id = int(total_features[feature_index].unique_id)
+                single_example_start_logits = start_logits[i].tolist()
+                single_example_end_logits = end_logits[i].tolist()
+                results.append(SquadResult(unique_id, single_example_start_logits, single_example_end_logits))
 
         return {"results": QAResults(results)}
 
@@ -98,7 +110,11 @@ class MRCTransformer(BaseTransformer):
             features = features[: len(qa_results)]
             feature_qas_ids = set([feature.qas_id for feature in features])
             examples = [example for example in examples if example.qas_id in feature_qas_ids]
-
+        
+        print(f'HPARAMS ==> {self.hparams}')
+        print(f'FEATURES ==> {features[0]}')
+        print(f'RESULTS ==> {qa_results[0].start_logits}, {qa_results[0].end_logits}, {qa_results[0].unique_id}')
+        
         preds = compute_predictions_logits(
             all_examples=examples,
             all_features=features,
@@ -142,3 +158,9 @@ class MRCTransformer(BaseTransformer):
             "A number of warnings are expected for a normal SQuAD evaluation.",
         )
         return parser
+    
+    def tensor_to_array(self, tensor):
+        return tensor.detach().cpu().numpy()
+
+    def tensor_to_list(self, tensor):
+        return self.tensor_to_array(tensor).tolist()
